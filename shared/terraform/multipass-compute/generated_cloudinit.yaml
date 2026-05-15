@@ -1,0 +1,9 @@
+---
+users:
+  - default
+  - name: ubuntu
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDMWeLTclfDEScYcwuJbWgbyT5/M8wsJuna+Xzl3RfPE aimeeu@aimeeu-J4XDQX7JJ4
+
