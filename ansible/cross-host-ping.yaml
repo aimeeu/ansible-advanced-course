@@ -1,0 +1,28 @@
+# cross_host_ping.yml - Test connectivity between host groups
+---
+- name: Test app-to-database connectivity
+  hosts: web
+  gather_facts: false
+  tasks:
+  - name: Ping each database server
+    ansible.builtin.command: "ping -c 2 -W 2 {{ item }}"
+    loop: "{{ groups['database'] }}"
+    register: db_ping
+    changed_when: false
+    ignore_errors: true
+
+  - name: Check database port from app servers
+    ansible.builtin.wait_for:
+      host: "{{ item }}"
+      port: 5432
+      timeout: 5
+    loop: "{{ groups['database'] }}"
+    register: db_port_check
+    ignore_errors: true
+
+  - name: Report cross-host connectivity
+    ansible.builtin.debug:
+      msg: "{{ inventory_hostname }} -> {{ item.item }}: {{ 'OK' if item is not failed else 'FAILED' }}"
+    loop: "{{ db_port_check.results }}"
+    loop_control:
+      label: "{{ item.item }}"

@@ -1,14 +1,5 @@
-resource "random_id" "instance_suffix" {
-  count       = var.instance_count
-  byte_length = 4
-
-  keepers = {
-    prefix = var.instance_name_prefix
-  }
-}
-
 locals {
-  instance_names = { for idx, id in random_id.instance_suffix : idx => "${var.instance_name_prefix}-${id.hex}" }
+  instance_names = { for idx in range(var.instance_count) : idx => format("%s%02d", var.instance_name_prefix, idx + 1) }
 }
 
 resource "local_file" "cloudinit" {

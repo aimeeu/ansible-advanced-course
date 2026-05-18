@@ -1,0 +1,65 @@
+# network_diagnostic.yml - Full network connectivity diagnostic
+---
+- name: Network connectivity diagnostics
+  hosts: all
+  become: true
+  gather_facts: true
+  vars:
+    gateway: "{{ ansible_default_ipv4.gateway }}"
+    dns_servers:
+      - 8.8.8.8
+      - 1.1.1.1
+    external_hosts:
+      - google.com
+      - github.com
+  tasks:
+    - name: Test Ansible connectivity
+      ansible.builtin.ping:
+      register: ansible_ping
+
+    - name: Test gateway reachability
+      ansible.builtin.command: "ping -c 2 -W 2 {{ gateway }}"
+      register: gateway_ping
+      changed_when: false
+      ignore_errors: true
+
+    - name: Test DNS server reachability
+      ansible.builtin.command: "ping -c 2 -W 2 {{ item }}"
+      loop: "{{ dns_servers }}"
+      register: dns_ping
+      changed_when: false
+      ignore_errors: true
+
+    - name: Test DNS resolution
+      ansible.builtin.command: "nslookup {{ item }}"
+      loop: "{{ external_hosts }}"
+      register: dns_resolution
+      changed_when: false
+      ignore_errors: true
+
+    - name: Test external connectivity
+      ansible.builtin.command: "ping -c 2 -W 2 {{ item }}"
+      loop: "{{ external_hosts }}"
+      register: external_ping
+      changed_when: false
+      ignore_errors: true
+
+    - name: Test HTTP connectivity
+      ansible.builtin.uri:
+        url: "https://{{ item }}"
+        method: GET
+        timeout: 5
+        status_code: [200, 301, 302]
+      loop: "{{ external_hosts }}"
+      register: http_check
+      ignore_errors: true
+
+    - name: Compile diagnostic report
+      ansible.builtin.debug:
+        msg:
+          - "=== Network Diagnostic Report for {{ inventory_hostname }} ==="
+          - "Ansible connectivity: {{ 'OK' if ansible_ping.ping == 'pong' else 'FAILED' }}"
+          - "Gateway ({{ gateway }}): {{ 'OK' if gateway_ping.rc == 0 else 'FAILED' }}"
+          - "DNS resolution: {{ 'OK' if dns_resolution.results[0].rc == 0 else 'FAILED' }}"
+          - "External ping: {{ 'OK' if external_ping.results[0].rc == 0 else 'FAILED' }}"
+          - "HTTPS: {{ 'OK' if http_check.results[0] is not failed else 'FAILED' }}"
