@@ -1,4 +1,7 @@
 ---
+- name: Test Ansible connectivity
+  ansible.builtin.import_playbook: ansible-connectivity.yml
+
 - name: Deploy a web application
   hosts: web01
   vars_files:
