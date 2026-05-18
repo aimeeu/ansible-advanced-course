@@ -1,0 +1,7 @@
+---
+# Database configuration variables
+db_name: employee_db
+db_user: app_user
+db_password: Passw0rd
+
+# Made with Bob
