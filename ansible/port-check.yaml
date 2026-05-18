@@ -1,0 +1,40 @@
+# port_check.yml - Test TCP port connectivity
+---
+- name: Test service port connectivity
+  hosts: app_servers
+  gather_facts: false
+  vars:
+    services_to_check:
+      - host: db01.internal
+        port: 5432
+        name: PostgreSQL
+      - host: redis01.internal
+        port: 6379
+        name: Redis
+      - host: rabbitmq01.internal
+        port: 5672
+        name: RabbitMQ
+      - host: elasticsearch01.internal
+        port: 9200
+        name: Elasticsearch
+  tasks:
+    - name: Check TCP connectivity to each service
+      ansible.builtin.wait_for:
+        host: "{{ item.host }}"
+        port: "{{ item.port }}"
+        timeout: 5
+        state: started
+      loop: "{{ services_to_check }}"
+      loop_control:
+        label: "{{ item.name }} on {{ item.host }}:{{ item.port }}"
+      register: port_results
+      ignore_errors: true
+
+    - name: Report port check results
+      ansible.builtin.debug:
+        msg: >
+          {{ item.item.name }} ({{ item.item.host }}:{{ item.item.port }}):
+          {{ 'OPEN' if item is not failed else 'CLOSED/UNREACHABLE' }}
+      loop: "{{ port_results.results }}"
+      loop_control:
+        label: "{{ item.item.name }}"

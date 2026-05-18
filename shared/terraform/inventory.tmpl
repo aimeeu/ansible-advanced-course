@@ -1,12 +1,13 @@
 [all:vars]
 ansible_user=ubuntu
+ansible_ssh_private_key_file=~/.ssh/id_rsa
 
-[servers]
-%{ for name, ip in servers ~}
+[web]
+%{ for name, ip in web ~}
 ${name} ansible_host=${ip}
 %{ endfor ~}
 
-[clients]
-%{ for name, ip in clients ~}
+[database]
+%{ for name, ip in database ~}
 ${name} ansible_host=${ip}
 %{ endfor ~}

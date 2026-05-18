@@ -1,0 +1,14 @@
+# ping_all.yml - Test Ansible connectivity to all hosts
+
+---
+- name: Test Ansible connectivity
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Ping all hosts
+      ansible.builtin.ping:
+      register: ping_result
+
+    - name: Show ping result
+      ansible.builtin.debug:
+        var: ping_result

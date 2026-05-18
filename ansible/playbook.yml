@@ -1,0 +1,82 @@
+---
+- name: Deploy a web application
+  hosts: web01
+  tasks:
+    - name: Install web app dependencies
+      become: true
+      ansible.builtin.apt:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - python3
+        - python3-setuptools
+        - python3-dev
+        - build-essential
+        - python3-pip
+        - python3-pymysql
+        - pkg-config
+        - libmysqlclient-dev
+
+    - name: Install database
+      become: true
+      ansible.builtin.apt:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - mysql-server
+        - mysql-client
+
+    - name: Start database services
+      become: true
+      ansible.builtin.service:
+        name: mysql
+        state: started
+        enabled: true
+
+    - name: Create application database
+      become: true
+      ansible.mysql.mysql_db:
+        name: employee_db
+        state: present
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+
+    - name: Create database user
+      become: true
+      ansible.mysql.mysql_user:
+        name: app_user
+        password: Passw0rd
+        priv: "employee_db.*:ALL"
+        state: present
+        host: "%"
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+
+    - name: Install Python Flask dependencies
+      ansible.builtin.pip:
+        name: "{{ item }}"
+        state: present
+        break_system_packages: true
+      with_items:
+        - Flask
+        - Flask-MySQLDB
+
+    - name: Copy source code
+      become: true
+      ansible.builtin.copy:
+        src: app.py
+        dest: /opt/app.py
+        mode: '0644'
+
+    - name: Check if Flask is already running
+      ansible.builtin.command: pgrep -f "flask run"
+      register: flask_process
+      ignore_errors: true
+      changed_when: false
+
+    - name: Start application
+      ansible.builtin.shell: |
+        cd /opt
+        nohup python3 -m flask run --host=0.0.0.0 > /tmp/flask.log 2>&1 &
+      environment:
+        FLASK_APP: /opt/app.py
+      when: flask_process.rc != 0
+      changed_when: true
