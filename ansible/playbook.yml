@@ -3,15 +3,8 @@
   ansible.builtin.import_playbook: ansible-connectivity.yml
 
 - name: Deploy a web application
-  hosts: web01
-  vars_files:
-    - vars.yml
-  tasks:
-    - name: Include install dependencies tasks
-      ansible.builtin.include_tasks: tasks/install-dependencies.yml
-
-    - name: Include deploy database tasks
-      ansible.builtin.include_tasks: tasks/deploy-database.yml
-
-    - name: Include deploy web tasks
-      ansible.builtin.include_tasks: tasks/deploy-web.yml
+  hosts: database01
+  roles:
+    - os-config
+    - database
+    - web

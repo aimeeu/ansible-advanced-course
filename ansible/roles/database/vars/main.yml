@@ -1,3 +1,8 @@
-#SPDX-License-Identifier: MIT-0
+# SPDX-License-Identifier: MIT-0
 ---
 # vars file for database
+
+# Database configuration variables
+database_db_name: employee_db
+database_db_user: app_user
+database_db_password: Passw0rd
